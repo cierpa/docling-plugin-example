@@ -1,0 +1,21 @@
+[project]
+name = "docling-main"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "kampersanda", email = "shunsuke.kanda@cierpa.co.jp" }]
+requires-python = ">=3.11"
+dependencies = [
+    "docling-plugin",
+    "typed-argument-parser>=1.10.1",
+]
+
+[project.scripts]
+docling-main = "docling_main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+docling-plugin = { workspace = true }
