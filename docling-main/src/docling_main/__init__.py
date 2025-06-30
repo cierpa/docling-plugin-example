@@ -17,8 +17,9 @@ from docling.document_converter import (
     PdfFormatOption,
 )
 from docling_plugin import VisionOcrOptions
-from docling_plugin.space_remover import JapaneseSpaceRemover
 from tap import Tap
+
+from docling_main.space_remover import JapaneseSpaceRemover
 
 
 class OcrEngine(str, Enum):
