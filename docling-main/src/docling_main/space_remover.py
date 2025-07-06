@@ -26,7 +26,6 @@ class JapaneseSpaceRemover:
         - https://nikkie-ftnext.hatenablog.com/entry/remove-whitespace-in-text-with-regex
     """
 
-    _BASIC_LATIN = "[\u0000-\u007f]"
     _BLOCKS = "".join(
         (
             "[",
@@ -43,11 +42,7 @@ class JapaneseSpaceRemover:
         """
         Create an instance of JapaneseSpaceRemover.
         """
-        pattern1 = re.compile("({}) ({})".format(self._BLOCKS, self._BLOCKS))
-        # pattern2 = re.compile("({}) ({})".format(self._BLOCKS, self._BASIC_LATIN))
-        # pattern3 = re.compile("({}) ({})".format(self._BASIC_LATIN, self._BLOCKS))
-        # self._patterns = (pattern1, pattern2, pattern3)
-        self._patterns = [pattern1]
+        self._pattern = re.compile("({}) ({})".format(self._BLOCKS, self._BLOCKS))
 
     def remove_spaces(self, text: str) -> str:
         """
@@ -57,9 +52,8 @@ class JapaneseSpaceRemover:
 
         Leading and trailing spaces are not removed.
         """
-        for pattern in self._patterns:
-            while pattern.search(text):
-                text = pattern.sub(r"\1\2", text)
+        while self._pattern.search(text):
+            text = self._pattern.sub(r"\1\2", text)
         return text
 
     def remove_spaces_in_document(self, document: DoclingDocument) -> DoclingDocument:
