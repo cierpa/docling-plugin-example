@@ -19,3 +19,7 @@ uv run --package docling-main docling-main \
     --ocr-engine visionocr \
     --force-ocr
 ```
+
+## Memo
+
+https://docling-project.github.io/docling/installation/

@@ -52,17 +52,17 @@ def main() -> None:
     match args.ocr_engine:
         case OcrEngine.EASY_OCR:
             pipeline_options.ocr_options = EasyOcrOptions(
-                lang=["en", "ja"],
+                lang=["ja"],
                 force_full_page_ocr=args.force_ocr,
             )
         case OcrEngine.RAPID_OCR:
             pipeline_options.ocr_options = RapidOcrOptions(
-                lang=["english", "japanese"],
+                lang=["japanese"],
                 force_full_page_ocr=args.force_ocr,
             )
         case OcrEngine.TESSERACT_OCR:
             pipeline_options.ocr_options = TesseractOcrOptions(
-                lang=["eng", "jpn"],
+                lang=["jpn"],
                 force_full_page_ocr=args.force_ocr,
             )
         case OcrEngine.VISION_OCR:
