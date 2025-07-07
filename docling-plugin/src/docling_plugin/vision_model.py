@@ -15,7 +15,7 @@ from google.cloud import vision_v1
 
 from docling_plugin.vision_schema import AnnotateImageResponse
 
-_log = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class VisionOcrOptions(OcrOptions):
@@ -38,7 +38,7 @@ class VisionOcrModel(BaseOcrModel):
             accelerator_options=accelerator_options,
         )
         self.options: VisionOcrOptions
-        self.scale = 3  # multiplier for 72 dpi == 216 dpi.
+        self.scale = 3  # 画像の解像度を上げるためのスケールファクター
         self.vision_client = vision_v1.ImageAnnotatorClient()
 
     def __call__(
@@ -54,18 +54,22 @@ class VisionOcrModel(BaseOcrModel):
                 yield page
             else:
                 with TimeRecorder(conv_res, "ocr"):
-                    # NOTE: 既存のモジュールでは、BaseOcrModel.get_ocr_rects(page) を通して、
+                    # EasyOcrModelなどでは、BaseOcrModel.get_ocr_rects(page) を通して、
                     # OCRを適用する領域のリストを計算し、各領域に対してOCRを適用している。
-                    # ここでは、Vision APIのリクエスト回数を高々1回に抑えるため、
-                    # 画像全体に対してOCRを適用している。
+                    # しかし、ここでは、Vision APIのリクエスト回数を高々1回に抑えるため、
+                    # 画像全体に対してOCRを適用する。
 
+                    # 高解像度のページ画像を取得する（72 dpi * 3 = 216 dpi）
                     high_res_image = page._backend.get_page_image(scale=self.scale)
 
+                    # 画像をPNG形式で保存するためのバッファを作成
                     content = BytesIO()
                     high_res_image.save(content, "PNG")
                     content.seek(0)
 
-                    # Batch request will be better.
+                    # Vision APIにリクエストを送信。
+                    # 簡単のため、個々のページに対して1回のリクエストをしているが、
+                    # バッチ処理の方が効率的。
                     request = vision_v1.AnnotateImageRequest(
                         image=vision_v1.Image(content=content.read()),
                         features=[
@@ -83,10 +87,11 @@ class VisionOcrModel(BaseOcrModel):
                         yield page
                         continue
 
-                    # Skip the first element as it is the full text.
+                    # 最初の要素は全文が格納されているため、無視する。
                     text_annotations = response.text_annotations[1:]
-                    _log.info(f"Found {len(text_annotations)} OCR results.")
+                    _logger.info(f"Found {len(text_annotations)} OCR results.")
 
+                    # OCR結果を規定のデータ構造に変換する。
                     all_ocr_cells = [
                         TextCell(
                             index=ix,
@@ -108,6 +113,7 @@ class VisionOcrModel(BaseOcrModel):
                         for ix, entity in enumerate(text_annotations)
                     ]
 
+                    # pageオブジェクトを更新する。
                     self.post_process_cells(all_ocr_cells, page)
                     yield page
 
