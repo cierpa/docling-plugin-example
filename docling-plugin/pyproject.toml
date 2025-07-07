@@ -13,4 +13,4 @@ build-backend = "hatchling.build"
 
 # https://docling-project.github.io/docling/concepts/plugins/
 [project.entry-points."docling"]
-docling_plugin = "docling_plugin"
+docling_plugin = "docling_plugin.vision_model"

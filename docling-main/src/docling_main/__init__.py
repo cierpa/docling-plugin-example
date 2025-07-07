@@ -16,7 +16,7 @@ from docling.document_converter import (
     ImageFormatOption,
     PdfFormatOption,
 )
-from docling_plugin import VisionOcrOptions
+from docling_plugin.vision_model import VisionOcrOptions
 from tap import Tap
 
 from docling_main.space_remover import JapaneseSpaceRemover
