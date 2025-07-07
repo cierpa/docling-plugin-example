@@ -114,7 +114,3 @@ class VisionOcrModel(BaseOcrModel):
     @classmethod
     def get_options_type(cls) -> type[OcrOptions]:
         return VisionOcrOptions
-
-
-def ocr_engines():
-    return {"ocr_engines": [VisionOcrModel]}
