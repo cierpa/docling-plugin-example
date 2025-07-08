@@ -1,0 +1,16 @@
+[project]
+name = "docling-plugin"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "kampersanda", email = "shunsuke.kanda@cierpa.co.jp" }]
+requires-python = ">=3.11"
+dependencies = ["docling==2.39.0", "google-cloud-vision>=3.10.2"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# https://docling-project.github.io/docling/concepts/plugins/
+[project.entry-points."docling"]
+custom_docling_plugin = "docling_plugin"
