@@ -1,25 +1,35 @@
 # docling-plugin-example
 
+This repository contains an example code for a Docling plugin
+using Google Cloud Vision OCR.
+
 ## Setup
 
 ```shell
 uv sync --all-packages
 ```
 
+Install the Japanese font for the rendering of the Japanese PDF.
+
 ```shell
 sudo apt install fonts-noto-cjk
 ```
 
-## Example Usage
+## Example usage
+
+Run the following command to convert a PDF file to Markdown
+using the custom Google Cloud Vision OCR engine.
 
 ```shell
 uv run --package docling-main docling-main \
-    --input-file data/n21a0000.pdf \
-    --output-md data/n21a0000.md \
+    --input-file input.pdf \
+    --output-md output.md \
     --ocr-engine visionocr \
     --force-ocr
 ```
 
-## Memo
+If you want to use different OCR engines, change the `--ocr-engine` option.
+See `docling-main/src/docling_main/__init__.py` for the supported options.
 
-https://docling-project.github.io/docling/installation/
+If you get some errors related to the OCR engines,
+see https://docling-project.github.io/docling/installation/.
