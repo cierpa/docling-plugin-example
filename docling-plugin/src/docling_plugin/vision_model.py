@@ -50,7 +50,9 @@ class VisionOcrModel(BaseOcrModel):
 
         for page in page_batch:
             if page._backend is None:
-                raise ValueError(f"Page {page} does not have a backend assigned.")
+                raise ValueError(
+                    f"Page {page.page_no} does not have a backend assigned."
+                )
 
             if not page._backend.is_valid():
                 yield page
