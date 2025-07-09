@@ -19,7 +19,7 @@ from docling.document_converter import (
 from docling_plugin.vision_model import VisionOcrOptions
 from tap import Tap
 
-from docling_main.space_remover import JapaneseSpaceRemover
+from docling_main.japanese_space_remover import remove_spaces_in_document
 
 
 class OcrEngine(str, Enum):
@@ -35,12 +35,12 @@ class ArgumentParser(Tap):
     output_jsonl: Path | None = None
     ocr_engine: OcrEngine = OcrEngine.EASY_OCR
     force_ocr: bool = False
+    logging_level: str = "INFO"
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-
     args = ArgumentParser(underscores_to_dashes=True).parse_args()
+    logging.basicConfig(level=args.logging_level)
 
     # Validate output paths
     if args.output_md is None and args.output_jsonl is None:
@@ -98,7 +98,7 @@ def main() -> None:
             "Please provide a PDF or image file."
         )
 
-    result.document = JapaneseSpaceRemover().remove_spaces_in_document(result.document)
+    result.document = remove_spaces_in_document(result.document)
 
     if args.output_md is not None:
         args.output_md.write_text(result.document.export_to_markdown())
