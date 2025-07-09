@@ -49,73 +49,74 @@ class VisionOcrModel(BaseOcrModel):
             return
 
         for page in page_batch:
-            assert page._backend is not None
+            if page._backend is None:
+                raise ValueError(f"Page {page} does not have a backend assigned.")
+
             if not page._backend.is_valid():
                 yield page
-            else:
-                with TimeRecorder(conv_res, "ocr"):
-                    # EasyOcrModelなどでは、BaseOcrModel.get_ocr_rects(page) を通して、
-                    # OCRを適用する領域のリストを計算し、各領域に対してOCRを適用している。
-                    # しかし、ここでは、Vision APIのリクエスト回数を高々1回に抑えるため、
-                    # 画像全体に対してOCRを適用する。
+                continue
 
-                    # 高解像度のページ画像を取得する（72 dpi * 3 = 216 dpi）
-                    high_res_image = page._backend.get_page_image(scale=self.scale)
+            with TimeRecorder(conv_res, "ocr"):
+                # EasyOcrModelなどでは、BaseOcrModel.get_ocr_rects(page) を通して、
+                # OCRを適用する領域のリストを計算し、各領域に対してOCRを適用している。
+                # しかし、ここでは、Vision APIのリクエスト回数を高々1回に抑えるため、
+                # 画像全体に対してOCRを適用する。
 
-                    # 画像をPNG形式で保存するためのバッファを作成
-                    content = BytesIO()
-                    high_res_image.save(content, "PNG")
-                    content.seek(0)
+                # 高解像度のページ画像を取得する（72 dpi * 3 = 216 dpi）
+                high_res_image = page._backend.get_page_image(scale=self.scale)
 
-                    # Vision APIにリクエストを送信。
-                    # 簡単のため、個々のページに対して1回のリクエストをしているが、
-                    # バッチ処理の方が効率的。
-                    request = vision_v1.AnnotateImageRequest(
-                        image=vision_v1.Image(content=content.read()),
-                        features=[
-                            vision_v1.Feature(
-                                type_=vision_v1.Feature.Type.TEXT_DETECTION
-                            )
-                        ],
-                    )
-                    response = self.vision_client.annotate_image(request=request)
-                    response = AnnotateImageResponse.model_validate(
-                        vision_v1.AnnotateImageResponse.to_dict(response)
-                    )
+                # 画像をPNG形式で保存するためのバッファを作成
+                content = BytesIO()
+                high_res_image.save(content, "PNG")
+                content.seek(0)
 
-                    if response.text_annotations is None:
-                        yield page
-                        continue
+                # Vision APIにリクエストを送信。
+                # 簡単のため、個々のページに対して1回のリクエストをしているが、
+                # バッチ処理の方が効率的。
+                request = vision_v1.AnnotateImageRequest(
+                    image=vision_v1.Image(content=content.read()),
+                    features=[
+                        vision_v1.Feature(type_=vision_v1.Feature.Type.TEXT_DETECTION)
+                    ],
+                )
+                response = self.vision_client.annotate_image(request=request)
+                response = AnnotateImageResponse.model_validate(
+                    vision_v1.AnnotateImageResponse.to_dict(response)
+                )
 
-                    # 最初の要素は全文が格納されているため、無視する。
-                    text_annotations = response.text_annotations[1:]
-                    _logger.info(f"Found {len(text_annotations)} OCR results.")
-
-                    # OCR結果を規定のデータ構造に変換する。
-                    all_ocr_cells = [
-                        TextCell(
-                            index=ix,
-                            text=entity.description,
-                            orig=entity.description,
-                            from_ocr=True,
-                            rect=BoundingRectangle.from_bounding_box(
-                                BoundingBox.from_tuple(
-                                    coord=(
-                                        entity.bounding_poly.vertices[0].x / self.scale,
-                                        entity.bounding_poly.vertices[0].y / self.scale,
-                                        entity.bounding_poly.vertices[2].x / self.scale,
-                                        entity.bounding_poly.vertices[2].y / self.scale,
-                                    ),
-                                    origin=CoordOrigin.TOPLEFT,
-                                )
-                            ),
-                        )
-                        for ix, entity in enumerate(text_annotations)
-                    ]
-
-                    # pageオブジェクトを更新する。
-                    self.post_process_cells(all_ocr_cells, page)
+                if response.text_annotations is None:
                     yield page
+                    continue
+
+                # 最初の要素は全文が格納されているため、無視する。
+                text_annotations = response.text_annotations[1:]
+                _logger.info(f"Found {len(text_annotations)} OCR results.")
+
+                # OCR結果を規定のデータ構造に変換する。
+                all_ocr_cells = [
+                    TextCell(
+                        index=ix,
+                        text=entity.description,
+                        orig=entity.description,
+                        from_ocr=True,
+                        rect=BoundingRectangle.from_bounding_box(
+                            BoundingBox.from_tuple(
+                                coord=(
+                                    entity.bounding_poly.vertices[0].x / self.scale,
+                                    entity.bounding_poly.vertices[0].y / self.scale,
+                                    entity.bounding_poly.vertices[2].x / self.scale,
+                                    entity.bounding_poly.vertices[2].y / self.scale,
+                                ),
+                                origin=CoordOrigin.TOPLEFT,
+                            )
+                        ),
+                    )
+                    for ix, entity in enumerate(text_annotations)
+                ]
+
+                # pageオブジェクトを更新する。
+                self.post_process_cells(all_ocr_cells, page)
+                yield page
 
     @classmethod
     def get_options_type(cls) -> type[OcrOptions]:
