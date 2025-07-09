@@ -20,6 +20,7 @@ from docling_plugin.vision_model import VisionOcrOptions
 from tap import Tap
 
 from docling_main.japanese_space_remover import remove_spaces_in_document
+from docling_main.table_cleaner import remove_markdown_boundaries_in_table
 
 
 class OcrEngine(str, Enum):
@@ -99,6 +100,7 @@ def main() -> None:
         )
 
     result.document = remove_spaces_in_document(result.document)
+    result.document = remove_markdown_boundaries_in_table(result.document)
 
     if args.output_md is not None:
         args.output_md.write_text(result.document.export_to_markdown())
