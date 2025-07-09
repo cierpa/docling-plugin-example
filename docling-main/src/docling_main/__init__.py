@@ -35,12 +35,12 @@ class ArgumentParser(Tap):
     output_jsonl: Path | None = None
     ocr_engine: OcrEngine = OcrEngine.EASY_OCR
     force_ocr: bool = False
+    logging_level: str = "INFO"
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO)
-
     args = ArgumentParser(underscores_to_dashes=True).parse_args()
+    logging.basicConfig(level=args.logging_level)
 
     # Validate output paths
     if args.output_md is None and args.output_jsonl is None:
