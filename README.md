@@ -3,6 +3,9 @@
 This repository contains an example code for a Docling plugin
 using Google Cloud Vision OCR.
 
+This is appendix code of the blog post
+[DoclingにGoogle Cloud Visionを組み込み高精度に日本語資料を解析する](https://tech.cierpa.co.jp/entry/2025/07/16/115419).
+
 ## Setup
 
 ```shell
